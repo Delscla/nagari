@@ -1,0 +1,601 @@
+{
+"info": {
+"_postman_id": "b1a2e7c9-043e-4f7e-9a1b-3f28f8f2d57d",
+"name": "Nagari API",
+"description": "Koleksi Postman untuk API Aplikasi Nagari Terpadu (Multi-Tenant)",
+"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+},
+"item": [
+{
+"name": "Public",
+"description": "Rute yang dapat diakses publik tanpa autentikasi.",
+"item": [
+{
+"name": "Get Public Info",
+"request": {
+"method": "GET",
+"header": [],
+"url": {
+"raw": "{{urlGlobal}}/public-info",
+"host": [
+"{{urlGlobal}}"
+],
+"path": [
+"public-info"
+]
+},
+"description": "Mengambil informasi umum aplikasi."
+},
+"response": []
+}
+]
+},
+{
+"name": "Authentication",
+"description": "Proses autentikasi untuk mendapatkan token.",
+"item": [
+{
+"name": "Login as Tenant User (Nagari)",
+"request": {
+"method": "POST",
+"header": [
+{
+"key": "Accept",
+"value": "application/json",
+"type": "text"
+}
+],
+"body": {
+"mode": "raw",
+"raw": "{\n    \"email\": \"admin.cilandak@app.com\",\n    \"password\": \"password\"\n}",
+"options": {
+"raw": {
+"language": "json"
+}
+}
+},
+"url": {
+"raw": "{{urlNagari}}/login",
+"host": [
+"{{urlNagari}}"
+],
+"path": [
+"login"
+]
+},
+"description": "Login sebagai user yang terdaftar di sebuah tenant (subdomain). URL harus menunjuk ke subdomain tenant, misal: http://cilandak.nagari.test/api"
+},
+"response": []
+},
+{
+"name": "Login as Global Admin",
+"request": {
+"method": "POST",
+"header": [
+{
+"key": "Accept",
+"value": "application/json",
+"type": "text"
+}
+],
+"body": {
+"mode": "raw",
+"raw": "{\n    \"email\": \"admin@pusat.com\",\n    \"password\": \"password\"\n}",
+"options": {
+"raw": {
+"language": "json"
+}
+}
+},
+"url": {
+"raw": "{{urlGlobal}}/login",
+"host": [
+"{{urlGlobal}}"
+],
+"path": [
+"login"
+]
+},
+"description": "Login sebagai user global di domain utama."
+},
+"response": []
+},
+{
+"name": "Get Current User (Me)",
+"request": {
+"method": "GET",
+"header": [],
+"url": {
+"raw": "{{urlNagari}}/me",
+"host": [
+"{{urlNagari}}"
+],
+"path": [
+"me"
+]
+},
+"description": "Mengambil detail user yang sedang login."
+},
+"response": []
+},
+{
+"name": "Logout",
+"request": {
+"method": "POST",
+"header": [],
+"url": {
+"raw": "{{urlNagari}}/logout",
+"host": [
+"{{urlNagari}}"
+],
+"path": [
+"logout"
+]
+},
+"description": "Menghapus token sesi user yang sedang aktif."
+},
+"response": []
+}
+]
+},
+{
+"name": "Global Admin",
+"description": "Endpoint yang diakses dari domain utama, biasanya untuk Super Admin.",
+"item": [
+{
+"name": "Global Users",
+"item": [
+{
+"name": "List Global Users",
+"request": {
+"method": "GET",
+"header": [],
+"url": {
+"raw": "{{urlGlobal}}/global/users",
+"host": [
+"{{urlGlobal}}"
+],
+"path": [
+"global",
+"users"
+]
+}
+},
+"response": []
+}
+]
+}
+]
+},
+{
+"name": "Tenant Specific (Nagari)",
+"description": "Endpoint yang HARUS diakses melalui subdomain tenant (contoh: cilandak.nagari.test).",
+"item": [
+{
+"name": "Users (Tenant)",
+"item": [
+{
+"name": "List Users in Tenant",
+"request": {
+"method": "GET",
+"header": [],
+"url": {
+"raw": "{{urlNagari}}/users",
+"host": [
+"{{urlNagari}}"
+],
+"path": [
+"users"
+]
+}
+},
+"response": []
+}
+]
+},
+{
+"name": "Wargas",
+"item": [
+{
+"name": "List Wargas",
+"request": {
+"method": "GET",
+"header": [],
+"url": {
+"raw": "{{urlNagari}}/wargas",
+"host": [
+"{{urlNagari}}"
+],
+"path": [
+"wargas"
+]
+}
+},
+"response": []
+}
+]
+},
+{
+"name": "Keluargas",
+"item": [
+{
+"name": "List Keluargas",
+"request": {
+"method": "GET",
+"header": [],
+"url": {
+"raw": "{{urlNagari}}/keluargas",
+"host": [
+"{{urlNagari}}"
+],
+"path": [
+"keluargas"
+]
+}
+},
+"response": []
+}
+]
+},
+{
+"name": "Pelayanan Surat (Warga)",
+"item": [
+{
+"name": "List Jenis Pelayanan",
+"protocolProfileBehavior": {
+"disableBodyPruning": true
+},
+"request": {
+"method": "GET",
+"header": [],
+"body": {
+"mode": "formdata",
+"formdata": []
+},
+"url": {
+"raw": "{{urlNagari}}/pelayanan/jenis",
+"host": [
+"{{urlNagari}}"
+],
+"path": [
+"pelayanan",
+"jenis"
+]
+}
+},
+"response": []
+},
+{
+"name": "Create Pelayanan Request",
+"request": {
+"method": "POST",
+"header": [],
+"body": {
+"mode": "formdata",
+"formdata": [
+{
+"key": "pelayanan_jenis_id",
+"value": "1",
+"type": "text"
+},
+{
+"key": "warga_id",
+"value": "1",
+"type": "text"
+},
+{
+"key": "attachments[]",
+"type": "file",
+"src": "/Users/user/Downloads/ktp.jpg"
+},
+{
+"key": "attachments[]",
+"type": "file",
+"src": "/Users/user/Downloads/kk.png"
+}
+]
+},
+"url": {
+"raw": "{{urlNagari}}/pelayanan",
+"host": [
+"{{urlNagari}}"
+],
+"path": [
+"pelayanan"
+]
+}
+},
+"response": []
+},
+{
+"name": "List Pelayanan Requests",
+"request": {
+"method": "GET",
+"header": [],
+"url": {
+"raw": "{{urlNagari}}/pelayanan",
+"host": [
+"{{urlNagari}}"
+],
+"path": [
+"pelayanan"
+]
+}
+},
+"response": []
+},
+{
+"name": "Show Pelayanan Request",
+"request": {
+"method": "GET",
+"header": [],
+"url": {
+"raw": "{{urlNagari}}/pelayanan/1",
+"host": [
+"{{urlNagari}}"
+],
+"path": [
+"pelayanan",
+"1"
+]
+}
+},
+"response": []
+},
+{
+"name": "Update Pelayanan Request",
+"request": {
+"method": "PUT",
+"header": [],
+"body": {
+"mode": "raw",
+"raw": "{\n    \"status\": \"Selesai\",\n    \"keterangan\": \"Dokumen sudah bisa diambil\"\n}",
+"options": {
+"raw": {
+"language": "json"
+}
+}
+},
+"url": {
+"raw": "{{urlNagari}}/pelayanan/1",
+"host": [
+"{{urlNagari}}"
+],
+"path": [
+"pelayanan",
+"1"
+]
+}
+},
+"response": []
+},
+{
+"name": "Delete Pelayanan Request",
+"request": {
+"method": "DELETE",
+"header": [],
+"url": {
+"raw": "{{urlNagari}}/pelayanan/1",
+"host": [
+"{{urlNagari}}"
+],
+"path": [
+"pelayanan",
+"1"
+]
+}
+},
+"response": []
+}
+]
+},
+{
+"name": "Arsip Surat (Internal)",
+"item": [
+{
+"name": "List Arsip Surat",
+"request": {
+"method": "GET",
+"header": [],
+"url": {
+"raw": "{{urlNagari}}/arsip-surat?kategori=Surat Tugas",
+"host": [
+"{{urlNagari}}"
+],
+"path": [
+"arsip-surat"
+],
+"query": [
+{
+"key": "kategori",
+"value": "Surat Tugas"
+}
+]
+}
+},
+"response": []
+},
+{
+"name": "Create Arsip Surat",
+"request": {
+"method": "POST",
+"header": [],
+"body": {
+"mode": "formdata",
+"formdata": [
+{
+"key": "nomor_surat",
+"value": "001/SK/IX/2025",
+"type": "text"
+},
+{
+"key": "judul",
+"value": "Surat Keputusan Pengangkatan Kader",
+"type": "text"
+},
+{
+"key": "kategori",
+"value": "Surat Keputusan",
+"type": "text"
+},
+{
+"key": "tanggal",
+"value": "2025-09-10",
+"type": "text"
+},
+{
+"key": "file_pdf",
+"type": "file",
+"src": "/Users/user/Documents/sk-kader.pdf"
+}
+]
+},
+"url": {
+"raw": "{{urlNagari}}/arsip-surat",
+"host": [
+"{{urlNagari}}"
+],
+"path": [
+"arsip-surat"
+]
+}
+},
+"response": []
+},
+{
+"name": "Show Arsip Surat",
+"request": {
+"method": "GET",
+"header": [],
+"url": {
+"raw": "{{urlNagari}}/arsip-surat/1",
+"host": [
+"{{urlNagari}}"
+],
+"path": [
+"arsip-surat",
+"1"
+]
+}
+},
+"response": []
+},
+{
+"name": "Update Arsip Surat (with new file)",
+"request": {
+"method": "POST",
+"header": [],
+"body": {
+"mode": "formdata",
+"formdata": [
+{
+"key": "nomor_surat",
+"value": "001/SK/IX/2025-REVISI",
+"type": "text"
+},
+{
+"key": "judul",
+"value": "Surat Keputusan Pengangkatan Kader (Revisi)",
+"type": "text"
+},
+{
+"key": "kategori",
+"value": "Surat Keputusan",
+"type": "text"
+},
+{
+"key": "tanggal",
+"value": "2025-09-11",
+"type": "text"
+},
+{
+"key": "file_pdf",
+"type": "file",
+"src": "/Users/user/Documents/sk-kader-revisi.pdf"
+}
+]
+},
+"url": {
+"raw": "{{urlNagari}}/arsip-surat/1",
+"host": [
+"{{urlNagari}}"
+],
+"path": [
+"arsip-surat",
+"1"
+]
+}
+},
+"response": []
+},
+{
+"name": "Delete Arsip Surat",
+"request": {
+"method": "DELETE",
+"header": [],
+"url": {
+"raw": "{{urlNagari}}/arsip-surat/1",
+"host": [
+"{{urlNagari}}"
+],
+"path": [
+"arsip-surat",
+"1"
+]
+}
+},
+"response": []
+}
+]
+}
+]
+}
+],
+"auth": {
+"type": "bearer",
+"bearer": [
+{
+"key": "token",
+"value": "{{token}}",
+"type": "string"
+}
+]
+},
+"event": [
+{
+"listen": "prerequest",
+"script": {
+"type": "text/javascript",
+"exec": [
+""
+]
+}
+},
+{
+"listen": "test",
+"script": {
+"type": "text/javascript",
+"exec": [
+""
+]
+}
+}
+],
+"variable": [
+{
+"key": "urlGlobal",
+"value": "http://nagari.test/api",
+"type": "default"
+},
+{
+"key": "urlNagari",
+"value": "http://cilandak.nagari.test/api",
+"type": "default"
+},
+{
+"key": "token",
+"value": "",
+"type": "default"
+}
+]
+}

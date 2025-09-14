@@ -1,0 +1,175 @@
+{
+  "info": {
+    "name": "Nagari",
+    "_postman_id": "a1b2c3d4-5678-90ab-cdef-1234567890ab",
+    "description": "API Collection untuk Nagari (Cilandak)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Cilandak",
+      "item": [
+        {
+          "name": "Warga",
+          "item": [
+            {
+              "name": "List Warga",
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{token}}" }
+                ],
+                "url": "{{base_url}}/wargas"
+              }
+            },
+            {
+              "name": "Create Warga",
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{token}}" },
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"nik\": \"1234567890\",\n  \"no_kk\": \"9876543210\",\n  \"nama\": \"Budi\",\n  \"tempat_lahir\": \"Cilandak\",\n  \"tanggal_lahir\": \"1990-01-01\",\n  \"jenis_kelamin\": \"L\",\n  \"status_perkawinan\": \"Kawin\",\n  \"status_domisili\": \"Tetap\"\n}"
+                },
+                "url": "{{base_url}}/wargas"
+              }
+            },
+            {
+              "name": "Find Warga by NIK",
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{token}}" },
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{ \"nik\": \"1234567890\" }"
+                },
+                "url": "{{base_url}}/wargas/search-nik"
+              }
+            },
+            {
+              "name": "Find Warga by No KK",
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{token}}" },
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{ \"no_kk\": \"9876543210\" }"
+                },
+                "url": "{{base_url}}/wargas/search-kk"
+              }
+            },
+            {
+              "name": "Warga Filters",
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{token}}" }
+                ],
+                "url": "{{base_url}}/wargas/filters?fields=rt,rw,jorong"
+              }
+            },
+            {
+              "name": "Warga Export CSV",
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{token}}" }
+                ],
+                "url": "{{base_url}}/wargas/export"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Keluarga",
+          "item": [
+            {
+              "name": "List Keluarga",
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{token}}" }
+                ],
+                "url": "{{base_url}}/keluargas"
+              }
+            },
+            {
+              "name": "Create Keluarga",
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{token}}" },
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"no_kk\": \"9876543210\",\n  \"kepala_keluarga_id\": 1,\n  \"alamat\": \"Jl. Melati RT 01 RW 02 Cilandak\"\n}"
+                },
+                "url": "{{base_url}}/keluargas"
+              }
+            },
+            {
+              "name": "Filter Keluarga by Jorong/RT/RW",
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{token}}" }
+                ],
+                "url": "{{base_url}}/keluargas?jorong=Melati&rt=01&rw=02"
+              }
+            },
+            {
+              "name": "Add Anggota Keluarga",
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{token}}" },
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{ \"warga_id\": 2 }"
+                },
+                "url": "{{base_url}}/keluargas/1/add-anggota"
+              }
+            },
+            {
+              "name": "Remove Anggota Keluarga",
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{token}}" },
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{ \"warga_id\": 2 }"
+                },
+                "url": "{{base_url}}/keluargas/1/remove-anggota"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://cilandak.nagari.test/api"
+    },
+    {
+      "key": "token",
+      "value": ""
+    }
+  ]
+}

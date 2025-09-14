@@ -1,0 +1,59 @@
+{
+    "data": [
+        {
+            "id": 1,
+            "nik": "31720101010100041098",
+            "no_kk": "317201010101000400",
+            "nama": "Siti Aminah",
+            "tempat_lahir": "Bandung",
+            "tanggal_lahir": "1992-03-20",
+            "jenis_kelamin": "P",
+            "status_perkawinan": "Belum Kawin",
+            "pendidikan": "S1",
+            "pekerjaan": "Guru",
+            "agama": "Islam",
+            "alamat": "Jl. Kenanga No. 5",
+            "rt": "01",
+            "rw": "02",
+            "jorong": "Melati",
+            "status_domisili": "Tetap",
+            "no_hp": "081234567890",
+            "email": "siti.aminah@example.com"
+        }
+    ],
+    "links": {
+        "first": "https://cilandak.sentientx.space/api/wargas?page=1",
+        "last": "https://cilandak.sentientx.space/api/wargas?page=1",
+        "prev": null,
+        "next": null
+    },
+    "meta": {
+        "current_page": 1,
+        "from": 1,
+        "last_page": 1,
+        "links": [
+            {
+                "url": null,
+                "label": "&laquo; Previous",
+                "page": null,
+                "active": false
+            },
+            {
+                "url": "https://cilandak.sentientx.space/api/wargas?page=1",
+                "label": "1",
+                "page": 1,
+                "active": true
+            },
+            {
+                "url": null,
+                "label": "Next &raquo;",
+                "page": null,
+                "active": false
+            }
+        ],
+        "path": "https://cilandak.sentientx.space/api/wargas",
+        "per_page": 20,
+        "to": 1,
+        "total": 1
+    }
+}
