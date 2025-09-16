@@ -38,7 +38,7 @@ class PelayananController extends Controller
     public function index(Request $request) // <-- TAMBAHKAN Request $request di sini
     {
         // 1. Mulai dengan query builder, bukan langsung mengambil data
-        $query = PelayananRequest::with(['jenis', 'warga', 'attachments']);
+        $query = PelayananRequest::with(['jenis.template', 'warga', 'attachments']);
 
         // 2. Filter berdasarkan Jenis Layanan (ID Surat) jika ada
         if ($request->has('pelayanan_jenis_id')) {
