@@ -23,7 +23,8 @@ class LetterheadSettingController extends Controller
         );
 
         if ($setting->logo_path) {
-            $setting->logo_url = Storage::url($setting->logo_path);
+            // Menggunakan Storage::url() untuk mendapatkan URL yang benar
+            $setting->logo_url = Storage::disk('public')->url($setting->logo_path);
         }
 
         return response()->json($setting);
@@ -33,7 +34,7 @@ class LetterheadSettingController extends Controller
     {
         $tenantId = tenant('id');
 
-        $validated = $request->validate([
+        $request->validate([
             'line1' => 'required|string|max:255',
             'line2' => 'required|string|max:255',
             'line3' => 'required|string|max:255',
@@ -42,27 +43,29 @@ class LetterheadSettingController extends Controller
         ]);
 
         $setting = LetterheadSetting::firstOrNew(['tenant_id' => $tenantId]);
-
-        $dataToUpdate = $request->except(['logo', '_method']);
+        $setting->fill($request->except('logo'));
 
         if ($request->hasFile('logo')) {
-            // Hapus logo lama jika ada
-            if ($setting->logo_path) {
+            // Hapus file lama jika ada
+            if ($setting->logo_path && Storage::disk('public')->exists($setting->logo_path)) {
                 Storage::disk('public')->delete($setting->logo_path);
             }
-            // Simpan logo baru di 'storage/app/public/logos'
+            // Simpan file baru
             $path = $request->file('logo')->store('logos', 'public');
-            $dataToUpdate['logo_path'] = $path;
+            $setting->logo_path = $path;
         }
 
-        $setting->fill($dataToUpdate)->save();
+        $setting->save();
+        $setting->refresh(); // Ambil data paling baru dari database
 
-        // Ambil data terbaru untuk dikirim balik
-        $updatedSetting = $setting->fresh();
-        if ($updatedSetting->logo_path) {
-            $updatedSetting->logo_url = Storage::url($updatedSetting->logo_path);
+        // Selalu tambahkan logo_url ke dalam data yang dikirim kembali
+        if ($setting->logo_path) {
+            $setting->logo_url = Storage::disk('public')->url($setting->logo_path);
         }
 
-        return response()->json(['message' => 'Pengaturan kop surat berhasil disimpan.', 'data' => $updatedSetting]);
+        return response()->json([
+            'message' => 'Pengaturan kop surat berhasil disimpan.',
+            'data' => $setting
+        ]);
     }
 }
