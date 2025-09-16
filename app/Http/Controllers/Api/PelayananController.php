@@ -115,7 +115,7 @@ class PelayananController extends Controller
      */
     public function show($id)
     {
-        $pelayananRequest = PelayananRequest::with(['jenis', 'warga', 'attachments'])->findOrFail($id);
+        $pelayananRequest = PelayananRequest::with(['jenis.template', 'warga', 'attachments'])->findOrFail($id);
         return response()->json($pelayananRequest);
     }
 
