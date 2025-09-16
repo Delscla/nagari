@@ -61,6 +61,12 @@ Route::middleware('tenant')->group(function() {
         // --- MANAJEMEN MASTER DATA (ADMIN NAGARI) ---
         Route::apiResource('pelayanan-jenis', PelayananJenisController::class);
         Route::apiResource('surat-templates', SuratTemplateController::class);
+        Route::get('/letterhead-settings', [App\Http\Controllers\Api\LetterheadSettingController::class, 'show']);
+        Route::post('/letterhead-settings', [App\Http\Controllers\Api\LetterheadSettingController::class, 'store']);
+
+        // Tanda Tangan
+        Route::apiResource('/signatures', App\Http\Controllers\Api\SignatureController::class)->except(['show', 'update']);
+
     });
 });
 
