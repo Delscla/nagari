@@ -136,15 +136,15 @@ class PelayananController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        // Simpan data update
+        // 1. Lakukan update pada database
         $pelayananRequest->update($request->only('status', 'keterangan_staff'));
 
         // --- INTI PERBAIKAN ---
-        // Setelah update, muat ulang (refresh) model dari database
-        // beserta semua relasi yang dibutuhkan oleh frontend.
+        // 2. Setelah update, muat ulang (refresh) model DARI DATABASE
+        //    beserta semua relasi yang dibutuhkan oleh frontend.
         $pelayananRequest->load(['jenis.template', 'warga', 'attachments']);
 
-        // Kembalikan data yang sudah lengkap dan ter-update
+        // 3. Kembalikan objek JSON yang sudah lengkap dan ter-update
         return response()->json($pelayananRequest);
     }
 
