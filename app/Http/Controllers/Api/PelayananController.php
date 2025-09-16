@@ -123,22 +123,29 @@ class PelayananController extends Controller
      * Update the specified resource in storage.
      * Endpoint: PUT /pelayanan/{id}
      */
-    public function update(Request $request, $id)
+   public function update(Request $request, $id)
     {
         $pelayananRequest = PelayananRequest::findOrFail($id);
 
         $validator = Validator::make($request->all(), [
             'status' => ['required', Rule::in(['Diajukan', 'Diproses', 'Selesai', 'Ditolak'])],
-            'keterangan_staff' => 'nullable|string', // PERBAIKAN: Disesuaikan dengan migrasi
+            'keterangan_staff' => 'nullable|string',
         ]);
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
+        // Simpan data update
         $pelayananRequest->update($request->only('status', 'keterangan_staff'));
 
-        return response()->json($pelayananRequest->load(['jenis', 'warga', 'attachments']));
+        // --- INTI PERBAIKAN ---
+        // Setelah update, muat ulang (refresh) model dari database
+        // beserta semua relasi yang dibutuhkan oleh frontend.
+        $pelayananRequest->load(['jenis.template', 'warga', 'attachments']);
+
+        // Kembalikan data yang sudah lengkap dan ter-update
+        return response()->json($pelayananRequest);
     }
 
     /**
