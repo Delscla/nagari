@@ -27,11 +27,44 @@ class PelayananController extends Controller
      * Display a listing of the resource.
      * Endpoint: GET /pelayanan
      */
-    public function index()
+  // delscla/nagari/nagari-8bc6a8dc3879710a0030d01810964e862cf9e036/app/Http/Controllers/Api/PelayananController.php
+
+// ... (kode use statement dan fungsi lainnya tetap sama)
+
+    /**
+     * Display a listing of the resource.
+     * Endpoint: GET /pelayanan
+     */
+    public function index(Request $request) // <-- TAMBAHKAN Request $request di sini
     {
-        $requests = PelayananRequest::with(['jenis', 'warga', 'attachments'])->latest()->paginate(10);
+        // 1. Mulai dengan query builder, bukan langsung mengambil data
+        $query = PelayananRequest::with(['jenis', 'warga', 'attachments']);
+
+        // 2. Filter berdasarkan Jenis Layanan (ID Surat) jika ada
+        if ($request->has('pelayanan_jenis_id')) {
+            $query->where('pelayanan_jenis_id', $request->input('pelayanan_jenis_id'));
+        }
+
+        // 3. Filter berdasarkan pencarian jika ada
+        if ($request->has('search') && $request->input('search') != '') {
+            $searchTerm = $request->input('search');
+            $query->where(function($q) use ($searchTerm) {
+                // Cari di nomor surat
+                $q->where('nomor_surat', 'like', '%' . $searchTerm . '%')
+                  // Atau cari di nama warga (melalui relasi)
+                  ->orWhereHas('warga', function($wargaQuery) use ($searchTerm) {
+                      $wargaQuery->where('nama', 'like', '%' . $searchTerm . '%');
+                  });
+            });
+        }
+
+        // 4. Setelah semua filter diterapkan, baru ambil data dengan urutan terbaru dan paginasi
+        $requests = $query->latest()->paginate(10);
+
         return response()->json($requests);
     }
+
+// ... (sisa kode controller tetap sama)
 
     /**
      * Store a newly created resource in storage.
