@@ -15,7 +15,8 @@ class KeluargaController extends Controller
      // GET /keluargas
     public function index()
     {
-        $keluargas = Keluarga::all();
+        // PERBAIKAN: Gunakan with() untuk memuat relasi kepalaKeluarga
+        $keluargas = Keluarga::with('kepalaKeluarga')->get();
         return response()->json($keluargas);
     }
     // GET /keluargas/lookup?q=...&rt=01&rw=02&jorong=Melati&page=1
