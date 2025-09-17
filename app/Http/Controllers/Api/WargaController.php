@@ -14,11 +14,10 @@ class WargaController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request) // <-- Diubah untuk menerima Request
+    public function index(Request $request)
     {
         $query = Warga::query();
 
-        // Logika tenant yang sudah ada (DIPERTAHANKAN)
         if (!auth()->user() || !auth()->user()->is_global) {
             $tenant = app()->has('tenant') ? app('tenant') : null;
             if ($tenant) {
@@ -26,19 +25,16 @@ class WargaController extends Controller
             }
         }
 
-        // --- LOGIKA BARU UNTUK SEARCH DAN FILTER DIMASUKKAN DI SINI ---
-
-        // Logika untuk Pencarian (Search)
         if ($request->has('search') && $request->input('search') != '') {
             $searchTerm = $request->input('search');
             $query->where(function ($q) use ($searchTerm) {
-                $q->where('nik', 'like', "%{$searchTerm}%")
-                  ->orWhere('nama', 'like', "%{$searchTerm}%")
-                  ->orWhere('no_kk', 'like', "%{$searchTerm}%");
+                // Pencarian 'like' pada NIK dan No. KK tidak akan berfungsi karena enkripsi.
+                // Pencarian ini hanya efektif untuk 'nama'.
+                // Jika ingin mencari NIK/No. KK persis, gunakan filter di bawah.
+                $q->where('nama', 'like', "%{$searchTerm}%");
             });
         }
 
-        // Logika untuk Filter Dinamis berdasarkan kolom spesifik
         $filterableColumns = [
             'no_kk',
             'jenis_kelamin',
@@ -52,20 +48,26 @@ class WargaController extends Controller
 
         foreach ($filterableColumns as $column) {
             if ($request->has($column) && $request->input($column) != '') {
-                $query->where($column, $request->input($column));
+                // --- PERBAIKAN UTAMA ADA DI SINI ---
+                if ($column === 'no_kk') {
+                    // Jika kolomnya adalah no_kk, cari berdasarkan hash-nya
+                    $no_kk_hash = hash('sha256', $request->input('no_kk'));
+                    $query->where('no_kk_hash', $no_kk_hash);
+                } else {
+                    // Untuk kolom lain, gunakan pencarian biasa
+                    $query->where($column, $request->input($column));
+                }
+                // --- AKHIR PERBAIKAN ---
             }
         }
 
-        // --- AKHIR LOGIKA BARU ---
-
-        // Eksekusi query dengan paginasi dan sertakan query string
-        $wargas = $query->latest()->paginate(20)->withQueryString(); // <-- Diubah dengan latest() dan withQueryString()
+        $wargas = $query->latest()->paginate(20)->withQueryString();
 
         return WargaResource::collection($wargas);
     }
 
     // ====================================================================
-    // SEMUA METHOD DI BAWAH INI TIDAK DIUBAH SAMA SEKALI
+    // SISA METHOD DI BAWAH INI TIDAK PERLU DIUBAH
     // ====================================================================
 
     public function store(Request $request)
@@ -89,7 +91,6 @@ class WargaController extends Controller
             'no_hp' => 'nullable|string|max:20',
             'email' => 'nullable|email|max:100',
         ]);
-        \Log::debug('Store warga validated data:', $validated);
 
         if (Warga::where('nik_hash', hash('sha256', $request->nik))->exists()) {
             return response()->json(['error' => 'NIK sudah terdaftar'], 422);
@@ -205,8 +206,8 @@ class WargaController extends Controller
         }
 
         $response = [];
-        if ($request->nik) $response['nik_exists'] = Warga::where('nik',$request->nik)->exists();
-        if ($request->no_kk) $response['no_kk_exists'] = Warga::where('no_kk',$request->no_kk)->exists();
+        if ($request->nik) $response['nik_exists'] = Warga::where('nik_hash', hash('sha256', $request->nik))->exists();
+        if ($request->no_kk) $response['no_kk_exists'] = Warga::where('no_kk_hash', hash('sha256', $request->no_kk))->exists();
 
         return response()->json($response);
     }
