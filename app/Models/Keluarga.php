@@ -45,7 +45,7 @@ class Keluarga extends Model
     // --- Relasi banyak anggota keluarga ---
     public function anggotas()
     {
-        return $this->belongsToMany(Warga::class, 'keluarga_wargas', 'keluarga_id', 'warga_id')
+        return $this->belongsToMany(Warga::class, 'keluarga_warga', 'keluarga_id', 'warga_id')
                     ->withTimestamps();
     }
 }
