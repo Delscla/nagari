@@ -6,24 +6,82 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Keluarga;
 use App\Models\Warga;
-use App\Http\Resources\KeluargaResource; // <-- 1. Tambahkan baris ini
+use App\Http\Resources\KeluargaResource;
 use Illuminate\Support\Facades\Validator;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class KeluargaController extends Controller
 {
 
-    // GET /keluargas
     public function index()
     {
-        $keluargas = Keluarga::with('kepalaKeluarga')->get();
-
-        // 2. PERBAIKAN: Gunakan Resource Collection untuk mengembalikan data
+        // PERBAIKAN: Tambahkan withCount untuk menghitung jumlah anggota
+        $keluargas = Keluarga::with('kepalaKeluarga')->withCount('anggotas')->get();
         return KeluargaResource::collection($keluargas);
     }
 
-    // ... sisa kode controller Anda tidak perlu diubah ...
-    // GET /keluargas/lookup?q=...&rt=01&rw=02&jorong=Melati&page=1
+    // --- FUNGSI BARU: Untuk halaman detail ---
+    public function show($id)
+    {
+        // Memuat semua relasi yang dibutuhkan: kepala keluarga dan semua anggotanya
+        $keluarga = Keluarga::with(['kepalaKeluarga', 'anggotas'])->find($id);
+
+        if (!$keluarga) {
+            return response()->json(['message' => 'Data keluarga tidak ditemukan.'], 404);
+        }
+
+        return new KeluargaResource($keluarga);
+    }
+
+    // --- FUNGSI STORE YANG DIMODIFIKASI ---
+    public function store(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'no_kk' => 'required|string|unique:keluargas,no_kk',
+            'kepala_keluarga_id' => 'required|exists:wargas,id',
+            'alamat' => 'nullable|string',
+            'rt' => 'nullable|string|max:10',
+            'rw' => 'nullable|string|max:10',
+            'jorong' => 'nullable|string|max:50',
+        ]);
+
+        $validator->after(function ($validator) use ($request) {
+            if ($request->kepala_keluarga_id && $request->no_kk) {
+                $warga = Warga::find($request->kepala_keluarga_id);
+                if (!$warga) {
+                    $validator->errors()->add('kepala_keluarga_id', 'Warga tidak ditemukan.');
+                } elseif ($warga->no_kk !== $request->no_kk) {
+                    $validator->errors()->add('no_kk', 'No KK tidak cocok dengan Warga yang dipilih.');
+                }
+            }
+        });
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $keluarga = Keluarga::create([
+            'tenant_id' => app('tenant')->id,
+            'no_kk' => $request->no_kk,
+            'kepala_keluarga_id' => $request->kepala_keluarga_id,
+            'alamat' => $request->alamat,
+            'rt' => $request->rt,
+            'rw' => $request->rw,
+            'jorong' => $request->jorong,
+        ]);
+
+        // --- LOGIKA BARU: Tambahkan semua warga dengan No. KK yang sama sebagai anggota ---
+        $wargaDenganKkSama = Warga::where('no_kk', $request->no_kk)->pluck('id');
+        if ($wargaDenganKkSama->isNotEmpty()) {
+            $keluarga->anggotas()->sync($wargaDenganKkSama);
+        }
+        // --- SELESAI ---
+
+        // Menggunakan Resource untuk mengembalikan data yang sudah diformat
+        return new KeluargaResource($keluarga->load(['kepalaKeluarga', 'anggotas']));
+    }
+
+    // ... Sisa fungsi (lookup, filters, exportCsv, dll.) tetap sama seperti file Anda sebelumnya ...
     public function lookup(Request $request)
     {
         $q = $request->query('q');
@@ -48,7 +106,6 @@ class KeluargaController extends Controller
         return $query->paginate(10);
     }
 
-    // GET /keluargas/filters?fields=rt,rw,jorong
     public function filters(Request $request)
     {
         $fields = explode(',', $request->query('fields', 'rt,rw,jorong'));
@@ -64,7 +121,6 @@ class KeluargaController extends Controller
         return response()->json($results);
     }
 
-    // GET /keluargas/export
     public function exportCsv(Request $request): StreamedResponse
     {
         $query = Keluarga::with('kepalaKeluarga');
@@ -106,7 +162,6 @@ class KeluargaController extends Controller
         return response()->stream($callback, 200, $headers);
     }
 
-    // POST /keluargas/import
     public function import(Request $request)
     {
         $data = $request->all();
@@ -142,52 +197,6 @@ class KeluargaController extends Controller
         ]);
     }
 
-    // POST /keluargas
-   public function store(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'no_kk' => 'required|string|unique:keluargas,no_kk',
-            'kepala_keluarga_id' => 'required|exists:wargas,id',
-            'alamat' => 'nullable|string',
-            'rt' => 'nullable|string|max:10',
-            'rw' => 'nullable|string|max:10',
-            'jorong' => 'nullable|string|max:50',
-        ]);
-
-        // Validasi custom: pastikan no_kk sama dengan warga
-        $validator->after(function ($validator) use ($request) {
-            if ($request->kepala_keluarga_id && $request->no_kk) {
-                $warga = Warga::find($request->kepala_keluarga_id);
-                if (!$warga) {
-                    $validator->errors()->add('kepala_keluarga_id', 'Warga tidak ditemukan.');
-                } elseif ($warga->no_kk !== $request->no_kk) {
-                    $validator->errors()->add('no_kk', 'No KK tidak cocok dengan Warga yang dipilih.');
-                }
-            }
-        });
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-
-        $keluarga = Keluarga::create([
-            'tenant_id' => app('tenant')->id,
-            'no_kk' => $request->no_kk,
-            'kepala_keluarga_id' => $request->kepala_keluarga_id,
-            'alamat' => $request->alamat,
-            'rt' => $request->rt,
-            'rw' => $request->rw,
-            'jorong' => $request->jorong,
-        ]);
-
-        return response()->json([
-            'message' => 'Keluarga berhasil dibuat',
-            'data' => $keluarga->load('kepalaKeluarga')
-        ], 201);
-    }
-
-
-    // POST /keluargas/{id}/add-anggota
     public function addAnggota(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
@@ -207,7 +216,6 @@ class KeluargaController extends Controller
         ]);
     }
 
-    // POST /keluargas/{id}/remove-anggota
     public function removeAnggota(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
