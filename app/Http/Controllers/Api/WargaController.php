@@ -13,57 +13,59 @@ use App\Models\Keluarga; // <-- Tambahkan ini
 class WargaController extends Controller
 {
     public function index(Request $request)
-    {
-        $query = Warga::query();
+{
+    $query = Warga::query();
 
-        if (!auth()->user() || !auth()->user()->is_global) {
-            $tenant = app()->has('tenant') ? app('tenant') : null;
-            if ($tenant) {
-                $query->where('tenant_id', $tenant->id);
-            }
+    if (!auth()->user() || !auth()->user()->is_global) {
+        $tenant = app()->has('tenant') ? app('tenant') : null;
+        if ($tenant) {
+            $query->where('tenant_id', $tenant->id);
         }
-
-        if ($request->has('search') && $request->input('search') != '') {
-            $searchTerm = $request->input('search');
-            $query->where('nama', 'like', "%{$searchTerm}%");
-        }
-
-        // --- LOGIKA FILTER KEPALA KELUARGA (BARU) ---
-        if ($request->has('belum_jadi_kepala') && $request->belum_jadi_kepala == 'true') {
-            // Ambil semua ID warga yang sudah menjadi kepala keluarga
-            $kepalaKeluargaIds = Keluarga::pluck('kepala_keluarga_id')->filter();
-            // Hanya tampilkan warga yang ID-nya tidak ada di daftar kepala keluarga
-            $query->whereNotIn('id', $kepalaKeluargaIds);
-        }
-        // --- AKHIR LOGIKA BARU ---
-
-        $filterableColumns = [
-            'no_kk', 'jenis_kelamin', 'status_perkawinan',
-            'pendidikan', 'pekerjaan', 'agama',
-            'jorong', 'status_domisili'
-        ];
-
-        foreach ($filterableColumns as $column) {
-            if ($request->has($column) && $request->input($column) != '') {
-                if ($column === 'no_kk') {
-                    $no_kk_hash = hash('sha256', $request->input('no_kk'));
-                    $query->where('no_kk_hash', $no_kk_hash);
-                    $query->whereDoesntHave('keluargas');
-                } else {
-                    $query->where($column, $request->input($column));
-                }
-            }
-        }
-
-        // Hapus paginasi jika ada parameter pencarian spesifik
-        if ($request->has('no_kk') || $request->has('search')) {
-            $wargas = $query->latest()->get();
-        } else {
-            $wargas = $query->latest()->paginate(20)->withQueryString();
-        }
-
-        return WargaResource::collection($wargas);
     }
+
+    if ($request->has('search') && $request->input('search') != '') {
+        $searchTerm = $request->input('search');
+        $query->where('nama', 'like', "%{$searchTerm}%");
+    }
+
+    if ($request->has('belum_jadi_kepala') && $request->belum_jadi_kepala == 'true') {
+        $kepalaKeluargaIds = Keluarga::pluck('kepala_keluarga_id')->filter();
+        $query->whereNotIn('id', $kepalaKeluargaIds);
+    }
+
+    // --- PERUBAHAN BARU ADA DI SINI ---
+    if ($request->has('belum_punya_keluarga') && $request->belum_punya_keluarga == 'true') {
+        // Hanya tampilkan warga yang tidak punya relasi di tabel keluarga_warga
+        $query->whereDoesntHave('keluargas');
+    }
+    // --- AKHIR PERUBAHAN ---
+
+    $filterableColumns = [
+        'no_kk', 'jenis_kelamin', 'status_perkawinan',
+        'pendidikan', 'pekerjaan', 'agama',
+        'jorong', 'status_domisili'
+    ];
+
+    foreach ($filterableColumns as $column) {
+        if ($request->has($column) && $request->input($column) != '') {
+            if ($column === 'no_kk') {
+                $no_kk_hash = hash('sha256', $request->input('no_kk'));
+                $query->where('no_kk_hash', $no_kk_hash);
+                // (Filter whereDoesntHave akan diterapkan oleh parameter di atas)
+            } else {
+                $query->where($column, $request->input($column));
+            }
+        }
+    }
+
+    if ($request->has('no_kk') || $request->has('search')) {
+        $wargas = $query->latest()->get();
+    } else {
+        $wargas = $query->latest()->paginate(20)->withQueryString();
+    }
+
+    return WargaResource::collection($wargas);
+}
 
     // ... sisa controller tetap sama ...
     // ====================================================================
