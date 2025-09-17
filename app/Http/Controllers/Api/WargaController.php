@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use App\Http\Resources\WargaResource;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Validator;
+use App\Models\Keluarga; // <-- Tambahkan ini
 
 class WargaController extends Controller
 {
@@ -24,20 +25,22 @@ class WargaController extends Controller
 
         if ($request->has('search') && $request->input('search') != '') {
             $searchTerm = $request->input('search');
-            $query->where(function ($q) use ($searchTerm) {
-                $q->where('nama', 'like', "%{$searchTerm}%");
-            });
+            $query->where('nama', 'like', "%{$searchTerm}%");
         }
 
+        // --- LOGIKA FILTER KEPALA KELUARGA (BARU) ---
+        if ($request->has('belum_jadi_kepala') && $request->belum_jadi_kepala == 'true') {
+            // Ambil semua ID warga yang sudah menjadi kepala keluarga
+            $kepalaKeluargaIds = Keluarga::pluck('kepala_keluarga_id')->filter();
+            // Hanya tampilkan warga yang ID-nya tidak ada di daftar kepala keluarga
+            $query->whereNotIn('id', $kepalaKeluargaIds);
+        }
+        // --- AKHIR LOGIKA BARU ---
+
         $filterableColumns = [
-            'no_kk',
-            'jenis_kelamin',
-            'status_perkawinan',
-            'pendidikan',
-            'pekerjaan',
-            'agama',
-            'jorong',
-            'status_domisili'
+            'no_kk', 'jenis_kelamin', 'status_perkawinan',
+            'pendidikan', 'pekerjaan', 'agama',
+            'jorong', 'status_domisili'
         ];
 
         foreach ($filterableColumns as $column) {
@@ -45,33 +48,26 @@ class WargaController extends Controller
                 if ($column === 'no_kk') {
                     $no_kk_hash = hash('sha256', $request->input('no_kk'));
                     $query->where('no_kk_hash', $no_kk_hash);
-
-                    // --- PERUBAHAN BARU ADA DI SINI ---
-                    // Hanya tampilkan warga yang belum punya keluarga
                     $query->whereDoesntHave('keluargas');
-                    // --- AKHIR PERUBAHAN ---
-
                 } else {
                     $query->where($column, $request->input($column));
                 }
             }
         }
 
-        // --- PERUBAHAN KECIL: Hapus paginasi saat mencari anggota ---
-        // Ini memastikan semua anggota yang cocok akan tampil, tidak hanya 20.
-        if ($request->has('no_kk')) {
+        // Hapus paginasi jika ada parameter pencarian spesifik
+        if ($request->has('no_kk') || $request->has('search')) {
             $wargas = $query->latest()->get();
         } else {
             $wargas = $query->latest()->paginate(20)->withQueryString();
         }
-        // --- AKHIR PERUBAHAN ---
 
         return WargaResource::collection($wargas);
     }
 
+    // ... sisa controller tetap sama ...
     // ====================================================================
     // SISA METHOD DI BAWAH INI TIDAK PERLU DIUBAH
-    // =oter controller code...
     // ====================================================================
 
     public function store(Request $request)
@@ -254,4 +250,5 @@ class WargaController extends Controller
 
         return Response::stream($callback, 200, $headers);
     }
+
 }
