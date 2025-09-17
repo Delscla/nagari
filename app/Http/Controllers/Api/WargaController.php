@@ -11,9 +11,6 @@ use Illuminate\Support\Facades\Validator;
 
 class WargaController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index(Request $request)
     {
         $query = Warga::query();
@@ -28,9 +25,6 @@ class WargaController extends Controller
         if ($request->has('search') && $request->input('search') != '') {
             $searchTerm = $request->input('search');
             $query->where(function ($q) use ($searchTerm) {
-                // Pencarian 'like' pada NIK dan No. KK tidak akan berfungsi karena enkripsi.
-                // Pencarian ini hanya efektif untuk 'nama'.
-                // Jika ingin mencari NIK/No. KK persis, gunakan filter di bawah.
                 $q->where('nama', 'like', "%{$searchTerm}%");
             });
         }
@@ -48,26 +42,36 @@ class WargaController extends Controller
 
         foreach ($filterableColumns as $column) {
             if ($request->has($column) && $request->input($column) != '') {
-                // --- PERBAIKAN UTAMA ADA DI SINI ---
                 if ($column === 'no_kk') {
-                    // Jika kolomnya adalah no_kk, cari berdasarkan hash-nya
                     $no_kk_hash = hash('sha256', $request->input('no_kk'));
                     $query->where('no_kk_hash', $no_kk_hash);
+
+                    // --- PERUBAHAN BARU ADA DI SINI ---
+                    // Hanya tampilkan warga yang belum punya keluarga
+                    $query->whereDoesntHave('keluargas');
+                    // --- AKHIR PERUBAHAN ---
+
                 } else {
-                    // Untuk kolom lain, gunakan pencarian biasa
                     $query->where($column, $request->input($column));
                 }
-                // --- AKHIR PERBAIKAN ---
             }
         }
 
-        $wargas = $query->latest()->paginate(20)->withQueryString();
+        // --- PERUBAHAN KECIL: Hapus paginasi saat mencari anggota ---
+        // Ini memastikan semua anggota yang cocok akan tampil, tidak hanya 20.
+        if ($request->has('no_kk')) {
+            $wargas = $query->latest()->get();
+        } else {
+            $wargas = $query->latest()->paginate(20)->withQueryString();
+        }
+        // --- AKHIR PERUBAHAN ---
 
         return WargaResource::collection($wargas);
     }
 
     // ====================================================================
     // SISA METHOD DI BAWAH INI TIDAK PERLU DIUBAH
+    // =oter controller code...
     // ====================================================================
 
     public function store(Request $request)
