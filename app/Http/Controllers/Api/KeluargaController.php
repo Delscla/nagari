@@ -201,6 +201,7 @@ class KeluargaController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'warga_id' => 'required|exists:wargas,id',
+            'status_hubungan_keluarga' => 'required|string|max:50', // Validasi field baru
         ]);
 
         if ($validator->fails()) {
@@ -208,6 +209,13 @@ class KeluargaController extends Controller
         }
 
         $keluarga = Keluarga::findOrFail($id);
+        $warga = Warga::findOrFail($request->warga_id);
+
+        // Update status hubungan di data Warga
+        $warga->status_hubungan_keluarga = $request->status_hubungan_keluarga;
+        $warga->save();
+
+        // Tambahkan warga sebagai anggota keluarga
         $keluarga->anggotas()->syncWithoutDetaching([$request->warga_id]);
 
         return response()->json([
